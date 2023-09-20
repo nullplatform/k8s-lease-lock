@@ -55,7 +55,7 @@ class K8SLock {
                         renewTime: new V1MicroTime(currentDate.getTime() + this.leaseDurationInSeconds * 1000)
                     }
                 };
-                if(lease.body.spec.holderIdentity === this.lockLeaserId) {
+                if(lease.body.spec.holderIdentity !== this.lockLeaserId) {
                     body.spec.leaseTransitions = (lease.body.spec.leaseTransitions || 0) + 1;
                     body.spec.acquireTime= currentDate;
                 }
