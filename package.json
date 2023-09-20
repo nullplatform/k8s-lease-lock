@@ -1,0 +1,17 @@
+{
+  "name": "k8s-lease-lock",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "NODE_ENV=test jest --forceExit --detectOpenHandles"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@kubernetes/client-node": "^0.19.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
