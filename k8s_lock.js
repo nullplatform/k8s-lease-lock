@@ -44,19 +44,22 @@ class K8SLock {
         if(new Date(lease.body.spec.renewTime || 0 ) < new Date() || lease.body.spec.holderIdentity === this.lockLeaserId) {
             const currentDate = new V1MicroTime();
             try {
-                await k8sApi.patchNamespacedLease(this.leaseName, this.namespace, {
+                const body = {
                     metadata: {
                         labels: this.labels,
                         resourceVersion: lease.body.metadata.resourceVersion
                     },
                     spec: {
-                        leaseTransitions: (lease.body.spec.leaseTransitions || 0) + 1,
                         leaseDurationSeconds: this.leaseDurationInSeconds,
-                        acquireTime: currentDate,
                         holderIdentity: this.lockLeaserId,
                         renewTime: new V1MicroTime(currentDate.getTime() + this.leaseDurationInSeconds * 1000)
                     }
-                },undefined,undefined,undefined,undefined,undefined,{
+                };
+                if(lease.body.spec.holderIdentity === this.lockLeaserId) {
+                    body.spec.leaseTransitions = (lease.body.spec.leaseTransitions || 0) + 1;
+                    body.spec.acquireTime= currentDate;
+                }
+                await k8sApi.patchNamespacedLease(this.leaseName, this.namespace, body,undefined,undefined,undefined,undefined,undefined,{
                     headers: {
                         "Content-Type": "application/strategic-merge-patch+json"
                     }
