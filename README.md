@@ -7,7 +7,7 @@ The **K8SLock** module is a Node.js library designed to provide distributed lock
 To use the **K8SLock** module in your Node.js project, you can install it via npm:
 
 ```shell
-npm install @k8s-lock
+npm install @nullplatform/k8s-lease-lock
 ```
 
 ## Usage
@@ -15,7 +15,7 @@ npm install @k8s-lock
 ### Importing the Module
 
 ```javascript
-const { K8SLock } = require("@k8s-lock");
+const { K8SLock } = require("@nullplatform/k8s-lease-lock");
 ```
 
 ### Creating a Lock
