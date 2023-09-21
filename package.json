@@ -13,5 +13,14 @@
   },
   "devDependencies": {
     "jest": "^29.7.0"
-  }
+  },
+  "keywords": [
+    "k8s",
+    "kubernetes",
+    "lock",
+    "lease",
+    "library",
+    "module"
+  ]
+
 }
