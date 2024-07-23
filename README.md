@@ -94,6 +94,35 @@ const { K8SLock } = require("@k8s-lock");
   console.log("Locking started:", lockInfo.isLocking);
 })();
 ```
+## Required k8s configuration
+
+Your k8s user will require to use a role with at least the following permissions 
+
+```yaml
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: lease-role
+rules:
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["create", "update", "patch", "get", "list"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: lease-binding
+  namespace: {{ .Release.Namespace }}
+subjects:
+  - kind: ServiceAccount
+    name: service-account-for-deploy
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: lease-ref
+  apiGroup: rbac.authorization.k8s.io
+```
 
 ## License
 
