@@ -4,7 +4,7 @@ const k8s = require("@kubernetes/client-node");
 // https://github.com/kubernetes-client/javascript/issues/754#issuecomment-2004562303
 const headerPatchMiddleware = {
   pre: async (requestContext) => {
-    // Careful, case matters here. Samples have `Content-Type` but don't appear to work
+    // Careful, case matters here. Samples have `Content-type` but don't appear to work
     requestContext.setHeaderParam(
       "Content-Type",
       "application/strategic-merge-patch+json",
