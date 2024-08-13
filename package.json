@@ -1,6 +1,6 @@
 {
   "name": "@nullplatform/k8s-lease-lock",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "The **K8SLock** module is a Node.js library designed to provide distributed locking functionality using Kubernetes leases. It allows you to manage locks in a Kubernetes cluster, ensuring that only one client or process can hold a lock at any given time. This is useful for scenarios where you need to coordinate tasks across multiple instances of your application or ensure exclusive access to shared resources.",
   "main": "index.js",
   "scripts": {
@@ -9,7 +9,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@kubernetes/client-node": "^0.19.0"
+    "@kubernetes/client-node": "^1.0.0-rc6"
   },
   "devDependencies": {
     "jest": "^29.7.0"
@@ -22,5 +22,4 @@
     "library",
     "module"
   ]
-
 }
