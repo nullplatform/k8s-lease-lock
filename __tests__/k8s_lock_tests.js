@@ -32,13 +32,11 @@ describe("K8SLock", () => {
             readNamespacedLease: jest.fn(),
             createNamespacedLease: jest.fn(() => {
                 return {
-                    body: {
-                        metadata: {
-                            resourceVersion: 1231
-                        },
-                        spec: {
+                    metadata: {
+                        resourceVersion: 1231
+                    },
+                    spec: {
 
-                        }
                     }
                 }
             }),
@@ -89,13 +87,11 @@ describe("K8SLock", () => {
 
     it("should not overwrite lock if lock exists and is not expired", async () => {
         mockApi.readNamespacedLease.mockResolvedValue({
-            body: {
-                metadata: {
-                    resourceVersion: 1231
-                },
-                spec: {
-                    renewTime: new Date(new Date().getTime() + 100000),  // set to a future time
-                }
+            metadata: {
+                resourceVersion: 1231
+            },
+            spec: {
+                renewTime: new Date(new Date().getTime() + 100000),  // set to a future time
             }
         });
 
@@ -112,13 +108,11 @@ describe("K8SLock", () => {
 
     it("should overwrite lock if lock exists and is expired", async () => {
         mockApi.readNamespacedLease.mockResolvedValue({
-            body: {
-                metadata: {
-                    resourceVersion: 12312
-                },
-                spec: {
-                    renewTime: new Date(new Date().getTime() - 10000),  // set to a past time
-                }
+            metadata: {
+                resourceVersion: 12312
+            },
+            spec: {
+                renewTime: new Date(new Date().getTime() - 10000),  // set to a past time
             }
         });
 
@@ -135,13 +129,11 @@ describe("K8SLock", () => {
 
     it("should start locking if lock is acquired", async () => {
         mockApi.readNamespacedLease.mockResolvedValue({
-            body: {
-                metadata: {
-                    resourceVersion: 13112
-                },
-                spec: {
-                    renewTime: new Date(new Date().getTime() - 10000),  // set to a past time
-                }
+            metadata: {
+                resourceVersion: 13112
+            },
+            spec: {
+                renewTime: new Date(new Date().getTime() - 10000),  // set to a past time
             }
         });
         mockApi.patchNamespacedLease.mockResolvedValue({});
@@ -161,13 +153,11 @@ describe("K8SLock", () => {
         jest.useFakeTimers();
 
         mockApi.readNamespacedLease.mockResolvedValue({
-            body: {
-                metadata: {
-                    resourceVersion: 13112
-                },
-                spec: {
-                    renewTime: new Date(new Date().getTime() - 10000),  // set to a past time
-                }
+            metadata: {
+                resourceVersion: 13112
+            },
+            spec: {
+                renewTime: new Date(new Date().getTime() - 10000),  // set to a past time
             }
         });
         mockApi.patchNamespacedLease.mockResolvedValue({});
@@ -195,24 +185,20 @@ describe("K8SLock", () => {
             calls++;
             if (calls === 1) {
                 return Promise.resolve({
-                    body: {
-                        metadata: {
-                            resourceVersion: 13112
-                        },
-                        spec: {
-                            renewTime: new Date(new Date().getTime() + 10000),  // set to a past time
-                        }
+                    metadata: {
+                        resourceVersion: 13112
+                    },
+                    spec: {
+                        renewTime: new Date(new Date().getTime() + 10000),  // set to a past time
                     }
                 });
             } else {
                 return Promise.resolve({
-                    body: {
-                        metadata: {
-                            resourceVersion: 13112
-                        },
-                        spec: {
-                            renewTime: new Date(new Date().getTime() - 10000),  // set to a past time
-                        }
+                    metadata: {
+                        resourceVersion: 13112
+                    },
+                    spec: {
+                        renewTime: new Date(new Date().getTime() - 10000),  // set to a past time
                     }
                 });
             }

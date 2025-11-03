@@ -22,31 +22,37 @@ class K8SLock {
         const k8sApi = this.kubeConfig.makeApiClient(CoordinationV1Api);
         let lease;
         try {
-            lease = await k8sApi.readNamespacedLease(this.leaseName, this.namespace);
+            lease = await k8sApi.readNamespacedLease({
+                name: this.leaseName,
+                namespace: this.namespace
+            });
         }catch (e) {
             if(e?.statusCode === 404 && this.createLeaseIfNotExist) {
-                lease = await k8sApi.createNamespacedLease(this.namespace,{
-                    metadata: {
-                        name: this.leaseName,
-                        labels: this.labels
-                    },
-                    spec: {
+                lease = await k8sApi.createNamespacedLease({
+                    namespace: this.namespace,
+                    body: {
+                        metadata: {
+                            name: this.leaseName,
+                            labels: this.labels
+                        },
+                        spec: {
+                        }
                     }
                 });
             } else {
                 throw e;
             }
         }
-        if(this.isLocking && lease.body.spec.holderIdentity === this.lockLeaserId) {
+        if(this.isLocking && lease.spec.holderIdentity === this.lockLeaserId) {
             this.isLocking = false;
         }
-        if(new Date(lease.body.spec.renewTime || 0 ) < new Date() || lease.body.spec.holderIdentity === this.lockLeaserId) {
+        if(new Date(lease.spec.renewTime || 0 ) < new Date() || lease.spec.holderIdentity === this.lockLeaserId) {
             const currentDate = new V1MicroTime();
             try {
                 const body = {
                     metadata: {
                         labels: this.labels,
-                        resourceVersion: lease.body.metadata.resourceVersion
+                        resourceVersion: lease.metadata.resourceVersion
                     },
                     spec: {
                         leaseDurationSeconds: this.leaseDurationInSeconds,
@@ -54,14 +60,60 @@ class K8SLock {
                         renewTime: new V1MicroTime(currentDate.getTime() + this.leaseDurationInSeconds * 1000)
                     }
                 };
-                if(lease.body.spec.holderIdentity !== this.lockLeaserId) {
-                    body.spec.leaseTransitions = (lease.body.spec.leaseTransitions || 0) + 1;
+                if(lease.spec.holderIdentity !== this.lockLeaserId) {
+                    body.spec.leaseTransitions = (lease.spec.leaseTransitions || 0) + 1;
                     body.spec.acquireTime= currentDate;
                 }
-                await k8sApi.patchNamespacedLease(this.leaseName, this.namespace, body,undefined,undefined,undefined,undefined,undefined,{
+                // Use strategic merge patch via raw HTTP request to avoid content-type issues
+                const cluster = this.kubeConfig.getCurrentCluster();
+                const user = this.kubeConfig.getCurrentUser();
+                const namespace = this.namespace;
+                const leaseName = this.leaseName;
+
+                const requestOptions = {
+                    method: 'PATCH',
                     headers: {
-                        "Content-Type": "application/strategic-merge-patch+json"
-                    }
+                        'Content-Type': 'application/strategic-merge-patch+json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                };
+
+                // Apply authentication
+                await this.kubeConfig.applyToHTTPSOptions(requestOptions);
+
+                const url = `${cluster.server}/apis/coordination.k8s.io/v1/namespaces/${namespace}/leases/${leaseName}`;
+                const https = await import('https');
+                const nodeUrl = await import('url');
+
+                await new Promise((resolve, reject) => {
+                    const parsedUrl = new nodeUrl.URL(url);
+                    const options = {
+                        hostname: parsedUrl.hostname,
+                        port: parsedUrl.port,
+                        path: parsedUrl.pathname,
+                        method: requestOptions.method,
+                        headers: requestOptions.headers,
+                        ...requestOptions
+                    };
+
+                    const req = https.request(options, (res) => {
+                        let data = '';
+                        res.on('data', (chunk) => data += chunk);
+                        res.on('end', () => {
+                            if (res.statusCode >= 200 && res.statusCode < 300) {
+                                resolve(JSON.parse(data));
+                            } else if (res.statusCode === 409) {
+                                reject({ statusCode: 409 });
+                            } else {
+                                reject(new Error(`HTTP ${res.statusCode}: ${data}`));
+                            }
+                        });
+                    });
+
+                    req.on('error', reject);
+                    req.write(requestOptions.body);
+                    req.end();
                 });
             }catch (e) {
                 if(e?.statusCode === 409) {
