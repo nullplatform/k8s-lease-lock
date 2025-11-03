@@ -1,5 +1,1 @@
-const {K8SLock} = require("./k8s_lock");
-
-module.exports = {
-    K8SLock
-}
+export {K8SLock} from "./k8s_lock.js";

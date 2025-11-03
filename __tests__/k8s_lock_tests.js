@@ -1,12 +1,32 @@
-const { K8SLock } = require('../k8s_lock');
-const k8s = require("@kubernetes/client-node");
-jest.mock("@kubernetes/client-node");
+import { jest } from '@jest/globals';
+
+// Create mocks before importing the modules
+let mockApi;
+let mockKubeConfig;
+
+const KubeConfigMock = jest.fn();
+const CoordinationV1ApiMock = jest.fn();
+const V1MicroTimeMock = jest.fn((time) => {
+    const date = time ? new Date(time) : new Date();
+    return {
+        getTime: () => date.getTime()
+    };
+});
+
+// Mock the module
+jest.unstable_mockModule("@kubernetes/client-node", () => ({
+    KubeConfig: KubeConfigMock,
+    CoordinationV1Api: CoordinationV1ApiMock,
+    V1MicroTime: V1MicroTimeMock
+}));
+
+// Import after mocking
+const { K8SLock } = await import('../k8s_lock.js');
 
 describe("K8SLock", () => {
-    let mockApi;
 
     beforeEach(() => {
-        jest.resetAllMocks();
+        jest.clearAllMocks();
 
         mockApi = {
             readNamespacedLease: jest.fn(),
@@ -26,13 +46,13 @@ describe("K8SLock", () => {
         };
         mockKubeConfig = {
             loadFromDefault: jest.fn(),
-            makeApiClient: jest.fn( () =>{
+            makeApiClient: jest.fn(() => {
                 return mockApi;
             })
         }
 
-        k8s.KubeConfig.mockImplementation(() => mockKubeConfig);
-        k8s.CoordinationV1Api.mockImplementation(() => mockApi);
+        KubeConfigMock.mockImplementation(() => mockKubeConfig);
+        CoordinationV1ApiMock.mockImplementation(() => mockApi);
     });
 
     it("should create a new lock if it does not exist and createLeaseIfNotExist is true", async () => {
@@ -59,7 +79,7 @@ describe("K8SLock", () => {
         let theError;
         try {
             await lock._lock();
-        }catch (e) {
+        } catch (e) {
             theError = e;
         }
 

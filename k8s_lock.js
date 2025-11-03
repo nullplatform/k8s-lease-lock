@@ -1,5 +1,4 @@
-const {KubeConfig, V1MicroTime} = require("@kubernetes/client-node");
-const k8s = require("@kubernetes/client-node");
+import {KubeConfig, V1MicroTime, CoordinationV1Api} from "@kubernetes/client-node";
 class K8SLock {
 
     constructor({kubeConfig, leaseName, namespace, createLeaseIfNotExist = true, labels = {}, lockLeaserId, leaseDurationInSeconds=30, refreshLockInterval, lockTryInterval}={}) {
@@ -20,7 +19,7 @@ class K8SLock {
     }
 
     async _lock() {
-        const k8sApi = this.kubeConfig.makeApiClient(k8s.CoordinationV1Api);
+        const k8sApi = this.kubeConfig.makeApiClient(CoordinationV1Api);
         let lease;
         try {
             lease = await k8sApi.readNamespacedLease(this.leaseName, this.namespace);
@@ -118,4 +117,4 @@ class K8SLock {
 
 }
 
-module.exports = {K8SLock};
+export {K8SLock};
