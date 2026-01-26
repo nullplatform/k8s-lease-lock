@@ -27,7 +27,7 @@ class K8SLock {
                 namespace: this.namespace
             });
         }catch (e) {
-            if(e?.statusCode === 404 && this.createLeaseIfNotExist) {
+            if((e?.statusCode === 404 || e?.code === 404) && this.createLeaseIfNotExist) {
                 lease = await k8sApi.createNamespacedLease({
                     namespace: this.namespace,
                     body: {
